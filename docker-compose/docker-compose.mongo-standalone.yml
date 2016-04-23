@@ -1,0 +1,12 @@
+version: '2'
+
+services:
+  mongo:
+    build:
+      context: ..
+    env_file:
+    - .env.test
+    ports:
+    - 27017
+    - 28017
+    stop_signal: SIGTERM

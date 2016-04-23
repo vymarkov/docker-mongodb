@@ -1,0 +1,35 @@
+consul:
+  restart: always
+  image: progrium/consul
+  container_name: consul
+  ports:
+  - "8400:8400"
+  - "8500:8500"
+  - "8600:53/udp"
+  - "172.17.0.1:53:53/udp"
+  hostname: consul1
+  command: -server -advertise 172.17.0.1 -bootstrap -domain nodebb -ui-dir /ui
+  
+registrator:
+  restart: always
+  image: gliderlabs/registrator
+  net: host
+  container_name: registrator
+  volumes:
+  - "/var/run/docker.sock:/tmp/docker.sock"
+  command: "-internal consul://localhost:8500/"
+  
+mongo:
+  restart: on-failure:3
+  build: ..
+  dns:
+  - 172.17.0.1
+  dns_search:
+  - service.nodebb
+  env_file:
+  - .env.test
+  environment:
+  - SERVICE_NAME=mongo
+  ports:
+  - 27017
+  command: /run.sh

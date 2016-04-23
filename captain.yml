@@ -1,0 +1,11 @@
+mongo:
+  build: Dockerfile
+  image: vymarkov/mongo
+  pre:
+  - echo "Preparing a MongoDB image..."
+  test:
+  - ./test/auth.sh
+  - ./test/replset_1.sh
+  - ./test/replset_2.sh
+  post:
+  - echo "Finished."

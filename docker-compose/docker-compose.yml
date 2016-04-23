@@ -1,0 +1,58 @@
+# docker-compose -f docker-common.mongoreplset.yml up -d
+
+#
+# more info there:
+#   https://docs.mongodb.org/manual/tutorial/enable-internal-authentication/#deploy-new-replica-set-with-access-control
+#   https://docs.mongodb.org/manual/reference/method/db.createUser/ 
+#   https://docs.mongodb.org/manual/reference/method/db.updateUser/
+
+
+# unfortunately, when we use docker-compose up -d command with this config
+# the primary service is not unreachable from other containers therefore
+# we just linking secondary and arbiter with primary service using docker links
+#
+# this works but IT IS A VERY BAD IDEA for real world cases 
+#
+# more info:    
+# https://docs.docker.com/engine/userguide/networking/default_network/dockerlinks/      
+
+registrator:
+  extends:
+    file: docker-compose.common.yml
+    service: registrator
+
+consul:
+  extends:
+    file: docker-compose.common.yml
+    service: consul
+    
+primary:
+  extends:
+    file: docker-compose.common.yml
+    service: mongo
+  container_name: primary
+  environment:
+  - MONGODB_BOOTSTRAP=yes
+  - MONGODB_REPLSET_ROLE=primary
+  - SERVICE_TAGS=primary
+  
+secondary:
+  extends:
+    file: docker-compose.common.yml
+    service: mongo
+  container_name: secondary
+  links: 
+  - primary:primary.mongo
+  environment:
+  - MONGODB_REPLSET_ROLE=secondary
+  - SERVICE_TAGS=secondary
+  
+arbiter:
+  extends:
+    file: docker-compose.common.yml
+    service: mongo
+  links: 
+  - primary:primary.mongo
+  environment:
+  - MONGODB_REPLSET_ROLE=arbiter
+  - SERVICE_TAGS=arbiter
