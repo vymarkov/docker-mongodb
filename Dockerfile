@@ -18,3 +18,4 @@ COPY mongodb-keyfile /etc/mongod/keyfile
 # EXPOSE 27017
 
 ENTRYPOINT ["/entrypoint.sh"]
+CMD [""]
