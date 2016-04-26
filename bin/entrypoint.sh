@@ -52,28 +52,28 @@ fi
 # by default is set to 'no' or was specified in the mongod.conf file
 if [ "$ROLE" == "primary" ] || [ "$ROLE" == "secondary" ]; then
   if [ "$REST" == "yes" ]; then
-    cmd="$cmd --httpinterface"
+    cmd="$cmd --rest --httpinterface"
   fi
 fi
 
 if [ "$MONGODB_REPLSET_ROLE" == "primary" ]; then
   if [ "$AUTH" == "yes" ]; then
       cmd="$cmd --auth"
+
+      if [ ! -f /data/db/.mongodb_password_set ]; then
+        echo $cmd
+        $cmd &
+        
+        ./set_mongodb_password.sh
+      fi
   fi
-  
-  if [ ! -f /data/db/.mongodb_password_set ]; then
-    echo $cmd
-    $cmd &
-    
-    ./set_mongodb_password.sh
-  fi  
 fi
 
 if [ "$REPLSET" == "yes" ]; then
   if [ "$REPLSET_NAME" != "" ]; then
     cmd="$cmd --replSet $REPLSET_NAME"
   fi
-  cmd="$cmd --keyFile /etc/mongod/keyfile"
+  # cmd="$cmd --keyFile /etc/mongod/keyfile"
 fi
 
 shutdownServer() {
@@ -92,13 +92,21 @@ $cmd &
 if [ "$MONGODB_REPLSET_ROLE" == "primary" ] && [ "$FIRST_BOOT" == "yes" ]; then
   sleep 3
 
-  mongo admin -u $USER -p $PASS /srv/mongo/bootreplset.js
+  if [ "$AUTH" == "yes" ]; then
+    mongo admin -u $USER -p $PASS /srv/mongo/bootreplset.js
+  fi
+
+  mongo admin /srv/mongo/bootreplset.js
 fi
 
 if [ "$BOOTSTRAP" == "yes" ] && [ "$FIRST_BOOT" == "yes" ]; then
   sleep 3
+
+  if [ "$AUTH" == "yes" ]; then
+    mongo admin -u $USER -p $PASS /srv/mongo/boot.js
+  fi
   
-  mongo admin -u $USER -p $PASS /srv/mongo/boot.js
+  mongo admin /srv/mongo/boot.js
 fi
 
 wait ${!}
