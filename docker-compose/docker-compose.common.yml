@@ -27,7 +27,7 @@ mongo:
   dns_search:
   - service.nodebb
   env_file:
-  - .env.test
+  - ./../.env.test
   environment:
   - SERVICE_NAME=mongo
   ports:
