@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  mongo:
+    image: vymarkov/mongo:3.4
+    build: .
+    ports: 
+    - 27017
+    environment:
+    - AUTH=yes
+    - MONGODB_REPLSET=yes
+    - MONGODB_REPLSET_NAME=rs0
+    - MONGODB_REPLSET_ROLE=primary
+    - MONGODB_USER=admin 
+    - MONGODB_PASS=admin
