@@ -53,8 +53,8 @@ variable cluster_size {
   default = 3
 }
 
-variable arbiter_count {
-  default = 1
+variable enable_arbiter_member {
+  default = false
 }
 
 variable hidden_members_count {
@@ -119,7 +119,7 @@ data "template_file" "boot_replset_cluster" {
 
 resource "null_resource" "cluster" {
   triggers {
-    primary           = "${aws_instance.primary.private_dns}"
+    primary           = "${var.cluster_size != 0 ? aws_instance.primary.private_dns :  ""}"
     secondary_members = "${join(",", aws_instance.secondary.*.private_dns)}"
     arbiter           = "${join(",", aws_instance.arbiter.*.private_dns)}"
   }

@@ -1,9 +1,28 @@
+data "aws_ami" "rancher" {
+  filter {
+    name   = "state"
+    values = ["available"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["rancheros-v1*-hvm*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  most_recent = true
+}
+
 resource "aws_instance" "primary" {
-  count                       = "1"
-  ami                         = "${var.aws_ami}"
+  count                       = "${var.cluster_size == 0 ? 0 : 1}"
+  ami                         = "${data.aws_ami.rancher.id}"
   instance_type               = "${var.instance_type}"
   key_name                    = "${var.keypair}"
-  availability_zone           = "${element(split(",", lookup(var.aws_azs, var.aws_region)), count.index % length(split(",", lookup(var.aws_azs, var.aws_region))))}"
+  // availability_zone           = "${element(split(",", lookup(var.aws_azs, var.aws_region)), count.index % length(split(",", lookup(var.aws_azs, var.aws_region))))}"
   associate_public_ip_address = true
   user_data                   = "${data.template_file.user_data.rendered}"
 
@@ -35,10 +54,10 @@ resource "aws_instance" "primary" {
 }
 
 resource "aws_instance" "secondary" {
-  count                       = "${var.cluster_size - var.arbiter_count - 1}"
+  count                       = "${var.cluster_size > 1 ? var.cluster_size - (var.enable_arbiter_member ? 1 : 0) - 1 : 0}"
   ami                         = "${var.aws_ami}"
   instance_type               = "${var.instance_type}"
-  key_name                    = "${file(var.keypair)}"
+  key_name                    = "${var.keypair}"
   availability_zone           = "${element(split(",", lookup(var.aws_azs, var.aws_region)), count.index % length(split(",", lookup(var.aws_azs, var.aws_region))))}"
   associate_public_ip_address = true
   user_data                   = "${data.template_file.user_data.rendered}"
@@ -74,7 +93,7 @@ resource "aws_instance" "secondary" {
 }
 
 resource "aws_instance" "arbiter" {
-  count                       = "${var.arbiter_count}"
+  count                       = "${var.enable_arbiter_member ? 1 : 0}"
   ami                         = "${var.aws_ami}"
   instance_type               = "${var.arbiter_instance_type}"
   key_name                    = "${var.keypair}"

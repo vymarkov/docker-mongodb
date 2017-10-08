@@ -6,6 +6,8 @@ rancher:
     mongo:
       image: ${docker_image}
       restart: always
+      ulimit: 
+        nproc: 5000000
       environment:
       - MONGODB_AUTH=yes
       - MONGODB_USER=${username}
